@@ -1,0 +1,58 @@
+# Default values for helm-chart-java-pipeline.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+
+global:
+  host: apps.cluster-9fk9x.9fk9x.sandbox2113.opentlc.com
+  namespace: fruits
+  workspaces:
+    pvcWorkspace: shared-workspace
+    quayWorkspace: dockerconfig
+
+pvc:
+  create: true
+  accessMode: ReadWriteOnce
+  resources: 1Gi
+
+pipelineTasks:
+  gitClone:
+    name: git-clone
+  mvnBuild:
+    name: mvn-build
+    runAfter: git-clone
+    image: maven
+    tag: 3.8.5-openjdk-17
+  sonarScan:
+    name: sonar-scan
+    runAfter: mvn-build
+    baseImage: registry.access.redhat.com/ubi8/ubi-minimal
+    baseTag: 8.2
+    cliImage: docker.io/sonarsource/sonar-scanner-cli
+    cliTag: 4.5@sha256:b8c95a37025f3c13162118cd55761ea0b2a13d1837f9deec51b7b6d82c52040a
+  mvnGetVersion:
+    name: mvn-get-version
+    runAfter: sonar-scan
+    image: gcr.io/cloud-builders/mvn@sha256
+    tag: 57523fc43394d6d9d2414ee8d1c85ed7a13460cbb268c3cd16d28cfb3859e641
+  buildImage:
+    name: buildah
+    runAfter: mvn-get-version
+
+secrets:
+  git:
+    create: false
+    name: ssh-key
+  sonar:
+    create: true
+  quay:
+    create: true
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""

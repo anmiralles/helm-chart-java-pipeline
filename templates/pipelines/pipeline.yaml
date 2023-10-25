@@ -1,0 +1,72 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: {{ include "helm-chart-java-pipeline.fullname" . }}
+spec:
+  workspaces:
+  - name: {{ .Values.global.workspaces.pvcWorkspace }}
+  - name: {{ .Values.global.workspaces.quayWorkspace }}
+  params:
+  - name: image
+  - name: git-url
+  - name: git-revision
+    default: main
+  tasks:
+  # 1. Git Clone
+    - name: {{ .Values.pipelineTasks.gitClone.name }}
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+  # 2. Maven Build
+    - name: {{ .Values.pipelineTasks.mvnBuild.name }}
+      taskRef:
+        name: mvn-build
+      workspaces:
+        - name: source
+          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+      runAfter:
+        - {{ .Values.pipelineTasks.mvnBuild.runAfter }}
+  # 3. Sonar Scan
+    - name: {{ .Values.pipelineTasks.sonarScan.name }}
+      taskRef:
+        kind: Task
+        name: sonar-scan
+      workspaces:
+        - name: source
+          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+      runAfter:
+        - {{ .Values.pipelineTasks.sonarScan.runAfter }}
+  # 4. Get Version Number
+    - name: {{ .Values.pipelineTasks.mvnGetVersion.name }}
+      taskRef:
+        kind: Task
+        name: mvn-get-version
+      workspaces:
+        - name: source
+          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+      runAfter:
+        - {{ .Values.pipelineTasks.mvnGetVersion.runAfter }}
+  # 5. Build and Push Image
+    - name: {{ .Values.pipelineTasks.buildImage.name }}
+      taskRef:
+        kind: ClusterTask
+        name: buildah
+      params:
+        - name: IMAGE
+          value: >-
+            $(params.image):$(tasks.mvn-get-version.results.version)
+      workspaces:
+        - name: source
+          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+        - name: dockerconfig
+          workspace: {{ .Values.global.workspaces.quayWorkspace }}
+      runAfter:
+        - {{ .Values.pipelineTasks.buildImage.runAfter }}
