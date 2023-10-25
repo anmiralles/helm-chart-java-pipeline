@@ -1,0 +1,22 @@
+{{- if .Values.triggers.create -}}
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: {{ template "helm-chart-java-pipeline.fullname" . }}-trigger
+spec:
+  serviceAccountName: pipeline
+  interceptors:
+    - ref:
+        name: "github"
+      params:
+        - name: "secretRef"
+          value:
+            secretName: github-secret
+            secretKey: secretToken
+        - name: "eventTypes"
+          value: ["push"]
+  bindings:
+    - ref: {{ template "helm-chart-java-pipeline.fullname" . }}-tb
+  template:
+    ref: {{ template "helm-chart-java-pipeline.fullname" . }}-tt
+{{- end -}}

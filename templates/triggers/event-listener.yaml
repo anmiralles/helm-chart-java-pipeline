@@ -1,0 +1,10 @@
+{{- if .Values.triggers.create -}}
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: {{ .Values.triggers.eventListener.name }}
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - triggerRef: {{ template "helm-chart-java-pipeline.fullname" . }}-trigger
+{{- end -}}

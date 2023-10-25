@@ -1,0 +1,13 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ template "helm-chart-java-pipeline.fullname" . }}-route
+spec:
+  host: {{ .Values.triggers.eventListener.svc }}-{{ .Values.global.namespace }}.{{ .Values.global.host }}
+  port:
+    targetPort: http-listener
+  to:
+    kind: Service
+    name: {{ .Values.triggers.eventListener.svc }}
+    weight: 100
+  wildcardPolicy: None

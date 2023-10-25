@@ -5,7 +5,7 @@ metadata:
 spec:
   params:
     - name: app-name
-      default: "quarkus-fruits-api"
+      default: "default"
     - default: quay.io/ibmgaragecloud/sonarsource-sonar-scanner-cli
       name: sonarqube-cli
     - default: target

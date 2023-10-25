@@ -1,12 +1,12 @@
-{{- if .Values.pvc.create -}}
+{{- if .Values.storage.pvc.create -}}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ template "helm-chart-java-pipeline.fullname" . }}-pvc
 spec:
   accessModes:
-    - {{ .Values.pvc.accessMode }}
+    - {{ .Values.storage.pvc.accessMode }}
   resources:
     requests:
-      storage: {{ .Values.pvc.resources }}
+      storage: {{ .Values.storage.pvc.resources }}
 {{- end -}}

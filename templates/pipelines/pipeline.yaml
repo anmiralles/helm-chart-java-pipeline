@@ -7,10 +7,11 @@ spec:
   - name: {{ .Values.global.workspaces.pvcWorkspace }}
   - name: {{ .Values.global.workspaces.quayWorkspace }}
   params:
-  - name: image
+  - name: app-name
   - name: git-url
   - name: git-revision
     default: main
+  - name: image
   tasks:
   # 1. Git Clone
     - name: {{ .Values.pipelineTasks.gitClone.name }}
@@ -39,6 +40,9 @@ spec:
       taskRef:
         kind: Task
         name: sonar-scan
+      params:
+        - name: app-name
+          value: $(params.app-name)
       workspaces:
         - name: source
           workspace: {{ .Values.global.workspaces.pvcWorkspace }}

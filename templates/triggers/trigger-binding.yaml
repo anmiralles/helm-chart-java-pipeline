@@ -1,0 +1,14 @@
+{{- if .Values.triggers.create -}}
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: {{ template "helm-chart-java-pipeline.fullname" . }}-tb
+spec:
+  params:
+  - name: git-repo-url
+    value: $(body.repository.url)
+  - name: git-repo-name
+    value: $(body.repository.name)
+  - name: git-revision
+    value: $(body.head_commit.id)
+{{- end -}}

@@ -1,19 +1,30 @@
 # Default values for helm-chart-java-pipeline.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-
-
 global:
-  host: apps.cluster-9fk9x.9fk9x.sandbox2113.opentlc.com
+  host: apps.cluster-xjpwf.xjpwf.sandbox2771.opentlc.com
   namespace: fruits
+  registry:
+    server: quay.io
+    user: rh-ee-amiralle
   workspaces:
     pvcWorkspace: shared-workspace
     quayWorkspace: dockerconfig
 
-pvc:
-  create: true
-  accessMode: ReadWriteOnce
-  resources: 1Gi
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+storage:
+  pvc:
+    create: true
+    accessMode: ReadWriteOnce
+    resources: 1Gi
 
 pipelineTasks:
   gitClone:
@@ -47,12 +58,11 @@ secrets:
     create: true
   quay:
     create: true
+  github:
+    create: true
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: false
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+triggers:
+  create: true
+  eventListener:
+    name: java-pipeline
+    svc: el-java-pipeline
