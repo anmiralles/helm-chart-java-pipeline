@@ -6,6 +6,7 @@ spec:
   workspaces:
   - name: {{ .Values.global.workspaces.pvcWorkspace }}
   - name: {{ .Values.global.workspaces.quayWorkspace }}
+  - name: {{ .Values.global.workspaces.gpgWorkspace }}
   params:
   - name: app-name
   - name: git-url
@@ -48,7 +49,19 @@ spec:
           workspace: {{ .Values.global.workspaces.pvcWorkspace }}
       runAfter:
         - {{ .Values.pipelineTasks.sonarScan.runAfter }}
-  # 4. Get Version Number
+  # 4. Verify Commit Signature
+    - name: {{ .Values.pipelineTasks.verifyCommit.name }}
+      taskRef:
+        kind: Task
+        name: verify-source-code-commit-signature
+      workspaces:
+        - name: source
+          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+        - name: gpg-secret
+          workspace: {{ .Values.global.workspaces.gpgWorkspace }}
+      runAfter:
+        - {{ .Values.pipelineTasks.verifyCommit.runAfter }}
+  # 5. Get Version Number
     - name: {{ .Values.pipelineTasks.mvnGetVersion.name }}
       taskRef:
         kind: Task
@@ -58,7 +71,8 @@ spec:
           workspace: {{ .Values.global.workspaces.pvcWorkspace }}
       runAfter:
         - {{ .Values.pipelineTasks.mvnGetVersion.runAfter }}
-  # 5. Build and Push Image
+        - {{ .Values.pipelineTasks.verifyCommit.name }}
+  # 6. Build and Push Image
     - name: {{ .Values.pipelineTasks.buildImage.name }}
       taskRef:
         kind: ClusterTask

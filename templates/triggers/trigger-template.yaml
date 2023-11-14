@@ -43,4 +43,7 @@ spec:
       - name: dockerconfig
         secret:
           secretName: quay-secret
+      - name: gpg-secret
+        secret:
+          secretName: gpg-public-key
 {{- end -}}

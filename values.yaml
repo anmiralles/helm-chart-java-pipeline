@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 global:
-  host: apps.cluster-xjpwf.xjpwf.sandbox2771.opentlc.com
+  host: apps.cluster-zp4x7.dynamic.opentlc.com
   namespace: fruits
   registry:
     server: quay.io
@@ -10,6 +10,7 @@ global:
   workspaces:
     pvcWorkspace: shared-workspace
     quayWorkspace: dockerconfig
+    gpgWorkspace: gpg-secret
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -41,6 +42,11 @@ pipelineTasks:
     baseTag: 8.2
     cliImage: docker.io/sonarsource/sonar-scanner-cli
     cliTag: 4.5@sha256:b8c95a37025f3c13162118cd55761ea0b2a13d1837f9deec51b7b6d82c52040a
+  verifyCommit:
+    name: verify-commit-signature
+    runAfter: mvn-build
+    image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8
+    tag: v1.10.4-4
   mvnGetVersion:
     name: mvn-get-version
     runAfter: sonar-scan
