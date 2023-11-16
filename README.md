@@ -1,14 +1,30 @@
 # README
 
-Pipeline resources:
+## Introduction
+This project tries to automate the build and deployment of a Quarkus application using Tekton Pipelines.
+
+## Pre-requisites
+1. A Github account to store the code.
+2. An Openshift cluster
+3. A GPG key to sign the code commits.
+4. A Quay.io account to store the container images.
+5. Sonarqube instance to analyze the code quality.
+
+## Pipeline resources:
 * The pipeline 
-* Some custom Tasks
+* Custom Tasks
 * The Triggers 
 * Supporting resources:
   * PVC
   * Secrets
   * Config Map
 
+## Pipeline
+The pipeline is defined in the file `pipeline.yaml`. It contains the following tasks:
+
+![tekton-pipeline](images/pipeline.png)
+
+## Install the pipeline
 ```shell
 helm install java-pipeline .
 ```  
@@ -35,3 +51,8 @@ Re-run last pipeline
 ```shell
 $ tkn pipeline start build-and-deploy --last
 ```
+## Related information
+
+https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account
+https://tekton.dev/docs/
+
