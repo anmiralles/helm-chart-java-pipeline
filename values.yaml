@@ -43,6 +43,7 @@ pipelineTasks:
     cliImage: docker.io/sonarsource/sonar-scanner-cli
     cliTag: 4.5@sha256:b8c95a37025f3c13162118cd55761ea0b2a13d1837f9deec51b7b6d82c52040a
   verifyCommit:
+    enabled: false
     name: verify-commit-signature
     runAfter: mvn-build
     image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8
@@ -66,6 +67,8 @@ secrets:
     create: true
   github:
     create: true
+  gpg: 
+    create: false
 
 triggers:
   create: true
