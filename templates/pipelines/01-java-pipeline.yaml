@@ -4,11 +4,8 @@ metadata:
   name: {{ include "helm-chart-java-pipeline.fullname" . }}
 spec:
   workspaces:
-  - name: {{ .Values.global.workspaces.pvcWorkspace }}
-  - name: {{ .Values.global.workspaces.quayWorkspace }}
-{{- if .Values.pipelineTasks.verifyCommit.enabled -}}
-  - name: {{ .Values.global.workspaces.gpgWorkspace }}
-{{- end -}}
+  - name: shared-workspace
+  - name: dockerconfig
   params:
   - name: app-name
   - name: git-url
@@ -17,29 +14,29 @@ spec:
   - name: image
   tasks:
   # 1. Git Clone
-    - name: {{ .Values.pipelineTasks.gitClone.name }}
+    - name: git-clone
       taskRef:
         name: git-clone
         kind: ClusterTask
       workspaces:
         - name: output
-          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+          workspace: shared-workspace
       params:
         - name: url
           value: $(params.git-url)
         - name: revision
           value: $(params.git-revision)
   # 2. Maven Build
-    - name: {{ .Values.pipelineTasks.mvnBuild.name }}
+    - name: mvn-build
       taskRef:
         name: mvn-build
       workspaces:
         - name: source
-          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+          workspace: shared-workspace
       runAfter:
-        - {{ .Values.pipelineTasks.mvnBuild.runAfter }}
+        - git-clone
   # 3. Sonar Scan
-    - name: {{ .Values.pipelineTasks.sonarScan.name }}
+    - name: sonar-scan
       taskRef:
         kind: Task
         name: sonar-scan
@@ -48,38 +45,21 @@ spec:
           value: $(params.app-name)
       workspaces:
         - name: source
-          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+          workspace: shared-workspace
       runAfter:
-        - {{ .Values.pipelineTasks.sonarScan.runAfter }}
-  # 4. Verify Commit Signature
-    {{- if .Values.pipelineTasks.verifyCommit.enabled -}}
-    - name: {{ .Values.pipelineTasks.verifyCommit.name }}
-      taskRef:
-        kind: Task
-        name: verify-source-code-commit-signature
-      workspaces:
-        - name: source
-          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
-        - name: gpg-secret
-          workspace: {{ .Values.global.workspaces.gpgWorkspace }}
-      runAfter:
-        - {{ .Values.pipelineTasks.verifyCommit.runAfter }}
-    {{- end -}}
-  # 5. Get Version Number
-    - name: {{ .Values.pipelineTasks.mvnGetVersion.name }}
+        - mvn-build
+  # 4. Get Version Number
+    - name: mvn-get-version
       taskRef:
         kind: Task
         name: mvn-get-version
       workspaces:
         - name: source
-          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+          workspace: shared-workspace
       runAfter:
-        - {{ .Values.pipelineTasks.mvnGetVersion.runAfter }}
-      {{- if .Values.pipelineTasks.verifyCommit.enabled -}}
-        - {{ .Values.pipelineTasks.verifyCommit.name }}
-      {{- end -}}
-  # 6. Build and Push Image
-    - name: {{ .Values.pipelineTasks.buildImage.name }}
+        - sonar-scan
+  # 5. Build and Push Image
+    - name: buildah
       taskRef:
         kind: ClusterTask
         name: buildah
@@ -89,8 +69,8 @@ spec:
             $(params.image):$(tasks.mvn-get-version.results.version)
       workspaces:
         - name: source
-          workspace: {{ .Values.global.workspaces.pvcWorkspace }}
+          workspace: shared-workspace
         - name: dockerconfig
-          workspace: {{ .Values.global.workspaces.quayWorkspace }}
+          workspace: dockerconfig
       runAfter:
-        - {{ .Values.pipelineTasks.buildImage.runAfter }}
+        - mvn-get-version

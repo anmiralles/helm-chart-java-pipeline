@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 global:
   host: apps.cluster-zp4x7.dynamic.opentlc.com
-  namespace: ci
+  namespace: cicd
   registry:
     server: quay.io
     user: rh-ee-amiralle
